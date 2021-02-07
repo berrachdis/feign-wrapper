@@ -2,6 +2,8 @@ package io.github.berrachdis.feignwrapper.core;
 
 import feign.Request;
 import feign.Response;
+import io.github.berrachdis.feignwrapper.util.CommonErrorHandlerUtil;
+import jdk.internal.org.jline.utils.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -12,12 +14,11 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.function.Supplier;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(SpringExtension.class)
 class FeignResponseWrapperTest {
-    private Request request = Request.create(Request.HttpMethod.GET, anyString(), new HashMap<>(), "body".getBytes(),
+    private final Request request = Request.create(Request.HttpMethod.GET, anyString(), new HashMap<>(), "body".getBytes(),
             Charset.defaultCharset(), null);
 
     @Test
@@ -27,7 +28,10 @@ class FeignResponseWrapperTest {
                 "}";
         final Supplier<Response> clientSupplier = () ->
                 Response.builder().status(HttpStatus.OK.value()).body(body.getBytes()).request(request).build();
-        boolean isError = FeignResponseWrapper.just(clientSupplier).isError();
+        boolean isError = FeignResponseWrapper.just(clientSupplier)
+                .doOnClientError(CommonErrorHandlerUtil::handleHttpClientError)
+                .doOnServerError(CommonErrorHandlerUtil::handleHttpServerError)
+                .isError();
         Assertions.assertFalse(isError);
     }
 
@@ -38,7 +42,11 @@ class FeignResponseWrapperTest {
                 "}";
         final Supplier<Response> clientSupplier = () ->
                 Response.builder().status(HttpStatus.BAD_REQUEST.value()).body(body.getBytes()).request(request).build();
-        boolean isError = FeignResponseWrapper.just(clientSupplier).isError();
+        boolean isError = FeignResponseWrapper.just(clientSupplier)
+                .doOnClientError(response -> CommonErrorHandlerUtil.handleHttpClientError(response))
+                .doOnServerError(response -> CommonErrorHandlerUtil.handleHttpServerError(response))
+                .isError();
+
         Assertions.assertTrue(isError);
     }
 }

@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class FeignResponseWrapper {
@@ -14,7 +15,7 @@ public class FeignResponseWrapper {
     private final ResponseWrap responseWrap;
     private boolean error;
 
-    public FeignResponseWrapper(Response response) {
+    private FeignResponseWrapper(Response response) {
         this.responseWrap = new ResponseWrap(response);
         this.error = responseWrap.isError();
     }
@@ -33,9 +34,39 @@ public class FeignResponseWrapper {
         return new FeignResponseWrapper(response);
     }
 
-    public static FeignResponseWrapper resumeOnError(Response response){
+    public static FeignResponseWrapper resumeOnError(Response response) {
         Objects.requireNonNull(response, "Response is null");
         return new FeignResponseWrapper(response);
+    }
+
+    public FeignResponseWrapper doOnError(Consumer<ResponseWrap> errorMapper) {
+        Objects.requireNonNull(errorMapper, "errorMapper is null");
+        if (isError()) {
+            errorMapper.accept(responseWrap);
+        }
+        return this;
+    }
+
+    public FeignResponseWrapper doOnSuccess(Consumer<ResponseWrap> successMapper) {
+        Objects.requireNonNull(successMapper, "successMapper is null");
+        if (!isError()) {
+            successMapper.accept(responseWrap);
+        }
+        return this;
+    }
+
+    public FeignResponseWrapper doOnClientError(Consumer<ResponseWrap> errorMapper) {
+        if (responseWrap.series() != null && responseWrap.is4xxClientError()) {
+            return doOnError(errorMapper);
+        }
+        return this;
+    }
+
+    public FeignResponseWrapper doOnServerError(Consumer<ResponseWrap> errorMapper) {
+        if (responseWrap.series() != null && responseWrap.is5xxServerError()) {
+            return doOnError(errorMapper);
+        }
+        return this;
     }
 
     public boolean isError() {
