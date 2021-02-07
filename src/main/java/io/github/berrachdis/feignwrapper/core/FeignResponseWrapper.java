@@ -1,6 +1,7 @@
 package io.github.berrachdis.feignwrapper.core;
 
 import feign.Response;
+import io.github.berrachdis.feignwrapper.exception.CustomFeignException;
 import io.github.berrachdis.feignwrapper.model.ResponseWrap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,18 +19,21 @@ public class FeignResponseWrapper {
         this.error = responseWrap.isError();
     }
 
-    public FeignResponseWrapper just(Supplier<Response> client) {
+    public static FeignResponseWrapper just(Supplier<Response> client) {
         Objects.requireNonNull(client, "Client supplier is null");
-        // TODO : Add error management in this part
-        return resumeOnSuccess(client.get());
+        try {
+            return resumeOnSuccess(client.get());
+        } catch (CustomFeignException ex) {
+            return resumeOnError(ex.getResponse());
+        }
     }
 
-    public FeignResponseWrapper resumeOnSuccess(Response response) {
+    public static FeignResponseWrapper resumeOnSuccess(Response response) {
         Objects.requireNonNull(response, "Response is null");
         return new FeignResponseWrapper(response);
     }
 
-    public FeignResponseWrapper resumeOnError(Response response ){
+    public static FeignResponseWrapper resumeOnError(Response response){
         Objects.requireNonNull(response, "Response is null");
         return new FeignResponseWrapper(response);
     }
