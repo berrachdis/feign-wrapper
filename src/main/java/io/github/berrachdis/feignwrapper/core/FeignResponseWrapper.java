@@ -29,6 +29,15 @@ public class FeignResponseWrapper {
         }
     }
 
+    public FeignResponseWrapper then(Supplier<Response> clientSupplier) {
+        Objects.requireNonNull(clientSupplier, "errorMapper is null");
+        if (!isError()) {
+            return just(clientSupplier);
+        }
+        log.error("The previous call has failed {} " + responseWrap);
+        return this;
+    }
+
     public static FeignResponseWrapper resumeOnSuccess(Response response) {
         Objects.requireNonNull(response, "Response is null");
         return new FeignResponseWrapper(response);
@@ -67,6 +76,16 @@ public class FeignResponseWrapper {
             return doOnError(errorMapper);
         }
         return this;
+    }
+
+    public void subscribe(Consumer<ResponseWrap> successMapper, Consumer<ResponseWrap> errorMapper) {
+        Objects.requireNonNull(successMapper, "successMapper is null");
+        Objects.requireNonNull(errorMapper, "errorMapper is null");
+        if (isError()) {
+            errorMapper.accept(responseWrap);
+        } else {
+            successMapper.accept(responseWrap);
+        }
     }
 
     public boolean isError() {
