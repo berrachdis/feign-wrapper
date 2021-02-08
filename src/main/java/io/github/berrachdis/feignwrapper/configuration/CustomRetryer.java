@@ -1,15 +1,16 @@
-package com.example.feignhelper.configuration;
+package io.github.berrachdis.feignwrapper.configuration;
 
 import feign.RetryableException;
 import feign.Retryer;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLHandshakeException;
 import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 
-@Slf4j
 public class CustomRetryer implements Retryer {
+    private static final Logger log = LoggerFactory.getLogger(CustomRetryer.class);
     private int retryMaxAttempt;
 
     private long retryInterval;
