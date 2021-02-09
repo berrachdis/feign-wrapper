@@ -3,6 +3,7 @@ package io.github.berrachdis.feignwrapper.core;
 import feign.Response;
 import io.github.berrachdis.feignwrapper.exception.CustomFeignException;
 import io.github.berrachdis.feignwrapper.model.ResponseWrap;
+import io.github.berrachdis.feignwrapper.util.Completion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -78,7 +79,7 @@ public class FeignResponseWrapper {
         return this;
     }
 
-    public void subscribe(Consumer<ResponseWrap> successMapper, Consumer<ResponseWrap> errorMapper) {
+    public void subscribe(Consumer<ResponseWrap> successMapper, Consumer<ResponseWrap> errorMapper, Completion completion) {
         Objects.requireNonNull(successMapper, "successMapper is null");
         Objects.requireNonNull(errorMapper, "errorMapper is null");
         if (isError()) {
@@ -86,6 +87,7 @@ public class FeignResponseWrapper {
         } else {
             successMapper.accept(responseWrap);
         }
+        completion.onComplete();
     }
 
     public boolean isError() {

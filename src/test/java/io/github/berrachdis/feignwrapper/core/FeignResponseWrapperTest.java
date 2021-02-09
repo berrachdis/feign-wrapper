@@ -3,7 +3,6 @@ package io.github.berrachdis.feignwrapper.core;
 import feign.Request;
 import feign.Response;
 import io.github.berrachdis.feignwrapper.util.CommonErrorHandlerUtil;
-import jdk.internal.org.jline.utils.Log;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

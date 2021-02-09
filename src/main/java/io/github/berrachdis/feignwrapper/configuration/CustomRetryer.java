@@ -42,7 +42,7 @@ public class CustomRetryer implements Retryer {
 
     @Override
     public Retryer clone() {
-        return new CustomRetryer(6, 2000L);
+        return new CustomRetryer(this.retryMaxAttempt, this.retryInterval);
     }
 
     public static void handleRestClientError(Throwable ex) {
