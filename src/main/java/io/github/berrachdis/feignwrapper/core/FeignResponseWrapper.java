@@ -1,5 +1,6 @@
 package io.github.berrachdis.feignwrapper.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import io.github.berrachdis.feignwrapper.exception.CustomFeignException;
 import io.github.berrachdis.feignwrapper.model.ResponseWrap;
@@ -7,12 +8,14 @@ import io.github.berrachdis.feignwrapper.util.Completion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class FeignResponseWrapper {
     private static final Logger log = LoggerFactory.getLogger(FeignResponseWrapper.class);
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final ResponseWrap responseWrap;
     private boolean error;
 
@@ -88,6 +91,14 @@ public class FeignResponseWrapper {
             successMapper.accept(responseWrap);
         }
         completion.onComplete();
+    }
+
+    public <T> T getBodyAsObject(Class<T> toValueType) throws IOException {
+        if (responseWrap.body() == null && responseWrap.body().isEmpty()) {
+            log.warn("The response body is null");
+            return null;
+        }
+        return objectMapper.readValue(this.responseWrap.body(), toValueType);
     }
 
     public boolean isError() {
