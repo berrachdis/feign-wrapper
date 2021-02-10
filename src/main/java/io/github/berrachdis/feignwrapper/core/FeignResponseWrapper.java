@@ -1,15 +1,17 @@
 package io.github.berrachdis.feignwrapper.core;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import feign.Response;
 import io.github.berrachdis.feignwrapper.exception.CustomFeignException;
+import io.github.berrachdis.feignwrapper.model.ConversionException;
 import io.github.berrachdis.feignwrapper.model.ResponseWrap;
 import io.github.berrachdis.feignwrapper.util.Completion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -93,12 +95,17 @@ public class FeignResponseWrapper {
         completion.onComplete();
     }
 
-    public <T> T getBodyAsObject(Class<T> toValueType) throws IOException {
+    public <T> Optional<T> getBodyAsObject(Class<T> toValueType) {
         if (responseWrap.body() == null && responseWrap.body().isEmpty()) {
-            log.warn("The response body is null");
-            return null;
+            log.warn("The response body is null or empty");
+            return Optional.empty();
         }
-        return objectMapper.readValue(this.responseWrap.body(), toValueType);
+        try {
+            return Optional.ofNullable(objectMapper.readValue(this.responseWrap.body(), toValueType));
+        } catch (JsonProcessingException e) {
+            log.error("Could not deserialize to the object due to [{}]", e.getMessage());
+            throw new ConversionException(e);
+        }
     }
 
     public boolean isError() {
