@@ -2,6 +2,7 @@ package io.github.berrachdis.feignwrapper.configuration;
 
 import feign.RetryableException;
 import feign.Retryer;
+import io.github.berrachdis.feignwrapper.propertie.FeignWrapperProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,6 +22,11 @@ public class CustomRetryer implements Retryer {
     public CustomRetryer(int retryMaxAttempt, Long retryInterval) {
         this.retryMaxAttempt = retryMaxAttempt;
         this.retryInterval = retryInterval;
+    }
+
+    public CustomRetryer(FeignWrapperProperties feignWrapperProperties) {
+        this.retryMaxAttempt = feignWrapperProperties.getRetry().getMaxAttempt();
+        this.retryInterval = feignWrapperProperties.getRetry().getInterval();
     }
 
     @Override
@@ -45,7 +51,7 @@ public class CustomRetryer implements Retryer {
         return new CustomRetryer(this.retryMaxAttempt, this.retryInterval);
     }
 
-    public static void handleRestClientError(Throwable ex) {
+    private static void handleRestClientError(Throwable ex) {
         if (ex.getCause() != null) {
             if (ex.getCause() instanceof SocketTimeoutException) {
                 // Handle socket timeout

@@ -23,8 +23,7 @@ public class FeignConfig {
     }
 
     @Bean
-    Retryer retryer(FeignWrapperProperties feignWrapperProperties) {
-        return new CustomRetryer(feignWrapperProperties.getRetry().getMaxAttempt(),
-                feignWrapperProperties.getRetry().getInterval());
+    public Retryer retryer(FeignWrapperProperties feignWrapperProperties) {
+        return new CustomRetryer(feignWrapperProperties);
     }
 }

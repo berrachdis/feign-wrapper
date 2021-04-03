@@ -1,7 +1,11 @@
 package io.github.berrachdis.feignwrapper.propertie;
 
+import io.github.berrachdis.feignwrapper.enumartion.Series;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.HashSet;
+import java.util.Set;
 
 @Configuration
 @ConfigurationProperties(prefix = "feign-wrapper")
@@ -15,6 +19,8 @@ public class FeignWrapperProperties {
     public static class Retry {
         private long interval = 2000L;
         private int maxAttempt = 1;
+        private final Set<Series> seriesSet = new HashSet<>();
+        private final Set<Integer> retryableStatusCodes = new HashSet<>();
 
         public long getInterval() {
             return interval;
@@ -30,6 +36,14 @@ public class FeignWrapperProperties {
 
         public void setMaxAttempt(int maxAttempt) {
             this.maxAttempt = maxAttempt;
+        }
+
+        public Set<Series> getSeriesSet() {
+            return seriesSet;
+        }
+
+        public Set<Integer> getRetryableStatusCodes() {
+            return retryableStatusCodes;
         }
     }
 }
