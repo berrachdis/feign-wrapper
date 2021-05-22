@@ -3,21 +3,25 @@ package io.github.berrachdis.feignwrapper.enumartion;
 import java.util.Arrays;
 
 public enum Series {
-    INFORMATIONAL(1),
-    SUCCESSFUL(2),
-    REDIRECTION(3),
-    CLIENT_ERROR(4),
-    SERVER_ERROR(5);
+    INFORMATIONAL(1, "INFORMATIONAL"),
+    SUCCESSFUL(2, "SUCCESSFUL"),
+    REDIRECTION(3, "REDIRECTION"),
+    CLIENT_ERROR(4, "Client error occurred"),
+    SERVER_ERROR(5, "Server error occurred");
 
     private final int value;
+    private final String message;
 
-    Series(int value) {
+    Series(int value, String message) {
         this.value = value;
+        this.message = message;
     }
 
     public int value() {
         return this.value;
     }
+
+    public String message() { return this.message; }
 
     public static Series valueOf(int status) {
         int seriesCode = status / 100;

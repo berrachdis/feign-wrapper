@@ -10,10 +10,15 @@ import java.util.Set;
 @Configuration
 @ConfigurationProperties(prefix = "feign-wrapper")
 public class FeignWrapperProperties {
+    private final Set<Integer> customStatus = new HashSet<>();
     private final Retry retry = new Retry();
 
     public Retry getRetry() {
         return retry;
+    }
+
+    public Set<Integer> getCustomStatus() {
+        return customStatus;
     }
 
     public static class Retry {

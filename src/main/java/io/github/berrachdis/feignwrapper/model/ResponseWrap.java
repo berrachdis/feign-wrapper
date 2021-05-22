@@ -1,28 +1,24 @@
 package io.github.berrachdis.feignwrapper.model;
 
-import feign.Request;
-import feign.Response;
 import io.github.berrachdis.feignwrapper.enumartion.Series;
-import io.github.berrachdis.feignwrapper.util.CommonIOUtil;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
-import java.util.Collection;
 import java.util.Map;
 
 public class ResponseWrap {
     private final int status;
     private final String reason;
-    private final Map<String, Collection<String>> headers;
+    private final Map<String, String> headers;
     private final String body;
-    private final Request request;
     private final Series series;
 
-    public ResponseWrap(Response response) {
-        this.status = response.status();
-        this.reason = response.reason();
-        this.body = CommonIOUtil.getResponseBody(response);
-        this.request = response.request();
-        this.headers = response.headers();
-        this.series = Series.valueOf(response.status());
+    public ResponseWrap(ResponseEntity<String> response) {
+        this.status = response.getStatusCodeValue();
+        this.reason = HttpStatus.resolve(response.getStatusCodeValue()) == null ? "No matching constant for " + response.getStatusCodeValue() : response.getStatusCode().getReasonPhrase();
+        this.body = response.getBody();
+        this.headers = response.getHeaders().toSingleValueMap();
+        this.series = Series.valueOf(response.getStatusCodeValue());
     }
 
     public int status() {
@@ -33,16 +29,8 @@ public class ResponseWrap {
         return reason;
     }
 
-    public Map<String, Collection<String>> headers() {
-        return headers;
-    }
-
     public String body() {
         return body;
-    }
-
-    public Request request() {
-        return request;
     }
 
     public Series series() {
@@ -80,7 +68,6 @@ public class ResponseWrap {
                 ", reason='" + reason + '\'' +
                 ", headers=" + headers +
                 ", body='" + body + '\'' +
-                ", request=" + request +
                 '}';
     }
 }

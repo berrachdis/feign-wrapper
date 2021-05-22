@@ -82,6 +82,10 @@
 			<artifactId>feign-okhttp</artifactId>
 			<version>${feign-okhttp.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>io.github.openfeign</groupId>
+			<artifactId>feign-jackson</artifactId>
+		</dependency>
 
 		<!-- Perform XML handling (marshall/unmarshall) -->
 		<dependency>

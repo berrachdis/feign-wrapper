@@ -2,6 +2,7 @@ package io.github.berrachdis.feignwrapper.configuration;
 
 import feign.RetryableException;
 import feign.Retryer;
+import io.github.berrachdis.feignwrapper.enumartion.Series;
 import io.github.berrachdis.feignwrapper.propertie.FeignWrapperProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,35 +12,25 @@ import java.net.ConnectException;
 import java.net.SocketTimeoutException;
 
 public class CustomRetryer implements Retryer {
-    private static final Logger log = LoggerFactory.getLogger(CustomRetryer.class);
-    private int retryMaxAttempt;
-
-    private long retryInterval;
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(CustomRetryer.class);
+    private final FeignWrapperProperties feignWrapperProperties;
     private int attempt = 1;
 
-
-    public CustomRetryer(int retryMaxAttempt, Long retryInterval) {
-        this.retryMaxAttempt = retryMaxAttempt;
-        this.retryInterval = retryInterval;
-    }
-
     public CustomRetryer(FeignWrapperProperties feignWrapperProperties) {
-        this.retryMaxAttempt = feignWrapperProperties.getRetry().getMaxAttempt();
-        this.retryInterval = feignWrapperProperties.getRetry().getInterval();
+        this.feignWrapperProperties = feignWrapperProperties;
     }
 
     @Override
     public void continueOrPropagate(RetryableException e) {
-        log.info("Feign retry attempt {} due to {} ", attempt, e.getMessage());
+        LOGGER.warn("Feign retry attempt {} due to  HttpStatus = {}, Series = {}", attempt, e.status(), Series.valueOf(e.status()).message());
 
         handleRestClientError(e);
 
-        if(attempt++ == retryMaxAttempt){
+        if(attempt++ == feignWrapperProperties.getRetry().getMaxAttempt()){
             throw e;
         }
         try {
-            Thread.sleep(retryInterval);
+            Thread.sleep(feignWrapperProperties.getRetry().getInterval());
         } catch (InterruptedException ignored) {
             Thread.currentThread().interrupt();
         }
@@ -48,25 +39,24 @@ public class CustomRetryer implements Retryer {
 
     @Override
     public Retryer clone() {
-        return new CustomRetryer(this.retryMaxAttempt, this.retryInterval);
+        return new CustomRetryer(feignWrapperProperties);
     }
 
     private static void handleRestClientError(Throwable ex) {
         if (ex.getCause() != null) {
             if (ex.getCause() instanceof SocketTimeoutException) {
                 // Handle socket timeout
-                log.warn("A socket time out error occurred while calling the client [{}].", ex.getMessage());
+                LOGGER.warn("A socket time out error occurred while calling the client [{}].", ex.getMessage());
                 return;
             } else if (ex.getCause() instanceof SSLHandshakeException) {
                 // Handle Sock handshake
-                log.warn("A socket handshake error occurred while calling the client [{}].", ex.getMessage());
+                LOGGER.warn("A socket handshake error occurred while calling the client [{}].", ex.getMessage());
                 return;
             } else if (ex.getCause() instanceof ConnectException) {
                 // Handle Connection exception
-                log.warn("A connection exception error occurred while calling the client [{}].", ex.getMessage());
+                LOGGER.warn("A connection exception error occurred while calling the client [{}].", ex.getMessage());
                 return;
             }
         }
-        log.warn("Unknown error occurred while calling the client [{}].", ex.getMessage());
     }
 }
