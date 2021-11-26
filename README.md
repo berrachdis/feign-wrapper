@@ -12,7 +12,28 @@ Feign-wrapper tool to use the openfeign library easily in functional way
 ```
 
 Usage:
-## 1. Example
+## 1. Configuration
+In addition to the basic configurations provided by the library ``feign-client``, the ``feign-wrapper ``
+offers a useful additional configurations that can be used to customize the execution of requests
+also the handling of responses in some exceptional cases like :
+
+* Add an undefined status in HttpStatus to manage it and to avoid the problem of ``No matching constant for [" + statusCode + "]``  
+* Add the custom retry according to :
+    * Series(INFORMATIONAL ,SUCCESSFUL ,REDIRECTION ,CLIENT_ERROR ,SERVER_ERROR) of the response
+    * Http status(500, 503, 299) of the response  
+* Define the max attempt and interval of retry
+
+```yaml
+feign-wrapper:
+  customStatus: 299, 298 #List of unknown HttpStatus code
+  retry:
+    max-attempt: 4
+    retry-interval: 2000L
+    seriesSet: SERVER_ERROR #INFORMATIONAL ,SUCCESSFUL ,REDIRECTION ,CLIENT_ERROR ,SERVER_ERROR
+    retryableStatusCodes: 400, 299 #List of HttpStatus code
+```
+
+## 2. Implementation
 
 ```java
 
@@ -51,7 +72,7 @@ public class TestService {
     
     public void submitWithoutReturningResponse() {
         FeignResponseWrapper
-                        .just(() -> mockClient.submit(401))
+                        .just(() -> mockClient.submit(500))
                         .doOnClientError(commonErrorHandlerUtilImpl::handleHttpClientError)
                         .doOnServerError(commonErrorHandlerUtilImpl::handleHttpServerError)
                         .doOnSuccess(commonErrorHandlerUtilImpl::handleSuccessResponse)
@@ -66,7 +87,7 @@ public class TestService {
 
     public ResponseEntity<Response> submit() {
             return FeignResponseWrapper
-                            .just(() -> mockClient.submit(CustomHttpStatus.OK.value()))
+                            .just(() -> mockClient.submit(299))
                             .doOnClientError(commonErrorHandlerUtilImpl::handleHttpClientError)
                             .doOnServerError(commonErrorHandlerUtilImpl::handleHttpServerError)
                             .doOnSuccess(commonErrorHandlerUtilImpl::handleSuccessResponse)
@@ -82,18 +103,25 @@ and imported our Library to submit the type of http and benefit from a lot of
 filters provided by the Feign-wrapper in order to customize the processing of response based on
 the response http code 
 
-Result of submitWithoutReturningResponse : 
+Result of submitWithoutReturningResponse :
 ```TEXT
-WARN CommonErrorHandlerUtilImpl    : A Client error occurred while calling the client {"type":"Unauthorized"}
-ERROR FeignResponseWrapper         : The previous call has failed {} ResponseWrap{status=401, reason='Unauthorized', headers={}, body='{"type":"Unauthorized"}'}
-WARN CommonErrorHandlerUtilImpl    : A Client error occurred while calling the client {"type":"Unauthorized"}
-INFO TestService                   : {"type":"Unauthorized"}
-INFO TestService                   : ## onComplete ##
+WARN CustomRetryer                  : Feign retry attempt 1 due to  HttpStatus = 500, Series = Server error occurred
+WARN CustomRetryer                  : Feign retry attempt 2 due to  HttpStatus = 500, Series = Server error occurred
+WARN CustomRetryer                  : Feign retry attempt 3 due to  HttpStatus = 500, Series = Server error occurred
+WARN CustomRetryer                  : Feign retry attempt 4 due to  HttpStatus = 500, Series = Server error occurred
+WARN CommonErrorHandlerUtilImpl     : A Server error occurred while calling the client {"type":"Internal Server Error"}
+ERROR FeignResponseWrapper          : The previous call has failed {} ResponseWrap{status=500, reason='Internal Server Error', headers={}, body='{"type":"Internal Server Error"}'}
+INFO TestService                    : {"type":"Internal Server Error"}
+INFO TestService                    : ## onComplete ##
 ```
 
 Result of submit : 
 ```TEXT
-INFO CommonErrorHandlerUtilImpl    : The call was successful {"type":"OK"}
+WARN CustomRetryer                  : Feign retry attempt 1 due to  HttpStatus = 299, Series = SUCCESSFUL
+WARN CustomRetryer                  : Feign retry attempt 2 due to  HttpStatus = 299, Series = SUCCESSFUL
+WARN CustomRetryer                  : Feign retry attempt 3 due to  HttpStatus = 299, Series = SUCCESSFUL
+WARN CustomRetryer                  : Feign retry attempt 4 due to  HttpStatus = 299, Series = SUCCESSFUL
+INFO CommonErrorHandlerUtilImpl     : The call was successful {"type":"OK"}
 ```
 
 Now let's go through the sequence that we have used one by one:
