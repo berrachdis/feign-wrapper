@@ -1,3 +1,5 @@
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=berrachdis_feign-wrapper&metric=coverage)](https://sonarcloud.io/summary/new_code?id=berrachdis_feign-wrapper)
+
 # feign-wrapper
 Feign-wrapper tool to use the openfeign library easily in functional way
 
