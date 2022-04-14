@@ -7,6 +7,7 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.Charset;
 
 public final class CommonIOUtil {
     private static final Logger log = LoggerFactory.getLogger(CommonIOUtil.class);
@@ -17,14 +18,16 @@ public final class CommonIOUtil {
 
     public static String getResponseBody(Response response) {
         String body = null;
-        if (response != null && response.body() != null) {
-            try {
-                body = IOUtils.toString(response.body().asInputStream());
-            } catch (IOException e) {
-                log.error("Failed to process error response body", e);
+        if (response != null) {
+            if (response.body() != null) {
+                try {
+                    body = IOUtils.toString(response.body().asInputStream(), Charset.defaultCharset());
+                } catch (IOException e) {
+                    log.error("Failed to process error response body", e);
+                }
+            } else {
+                log.error("Response body is null with status : [{}]", response.status());
             }
-        } else {
-            log.error("Response body is null with status : [{}]", response.status());
         }
         return body;
     }
