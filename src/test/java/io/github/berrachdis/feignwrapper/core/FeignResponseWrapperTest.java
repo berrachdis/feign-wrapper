@@ -4,7 +4,6 @@ import feign.Request;
 import io.github.berrachdis.feignwrapper.exception.ConversionException;
 import io.github.berrachdis.feignwrapper.model.MockResponseDTO;
 import io.github.berrachdis.feignwrapper.util.CommonErrorHandlerUtil;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.http.HttpStatus;
@@ -17,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -42,7 +42,7 @@ class FeignResponseWrapperTest {
                 .subscribe(
                         successResponse -> {
                             assertFalse(successResponse.isError());
-                            assertTrue("No matching constant for 299".equals(successResponse.reason()));
+                            assertEquals("No matching constant for 299", successResponse.reason());
                             assertTrue(successResponse.body().contains("it's OK"));
                         },
                         errorResponse -> assertNull(errorResponse),
@@ -63,7 +63,7 @@ class FeignResponseWrapperTest {
                         successResponse -> assertNull(successResponse),
                         errorResponse -> {
                             assertTrue(errorResponse.isError());
-                            assertTrue(HttpStatus.BAD_REQUEST.getReasonPhrase().equals(errorResponse.reason()));
+                            assertEquals(HttpStatus.BAD_REQUEST.getReasonPhrase(), errorResponse.reason());
                             assertTrue(errorResponse.body().contains("bad request"));
                         },
                         () -> System.out.println("finished")
@@ -83,7 +83,7 @@ class FeignResponseWrapperTest {
                         successResponse -> assertNull(successResponse),
                         errorResponse -> {
                             assertTrue(errorResponse.isError());
-                            assertTrue(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase().equals(errorResponse.reason()));
+                            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(), errorResponse.reason());
                             assertTrue(errorResponse.body().contains("Internal error"));
                         },
                         () -> System.out.println("finished")
@@ -101,7 +101,7 @@ class FeignResponseWrapperTest {
                 .doOnServerError(commonErrorHandlerUtil::handleHttpServerError)
                 .subscribe(
                         successResponse -> assertNull(successResponse),
-                        errorResponse -> Assertions.assertEquals(HttpStatus.BAD_REQUEST.value(), errorResponse.status()),
+                        errorResponse -> assertEquals(HttpStatus.BAD_REQUEST.value(), errorResponse.status()),
                         () -> System.out.println("finished")
                 );
     }
@@ -113,7 +113,7 @@ class FeignResponseWrapperTest {
                 "}";
         final Supplier<ResponseEntity<String>> clientSupplier = () -> ResponseEntity.badRequest().body(body);
         FeignResponseWrapper.just(clientSupplier).getBodyAsObject(MockResponseDTO.class)
-                .ifPresent(mockResponseDTO -> Assertions.assertEquals("it's OK", mockResponseDTO.getMock()));
+                .ifPresent(mockResponseDTO -> assertEquals("it's OK", mockResponseDTO.getMock()));
     }
 
     @Test
@@ -128,7 +128,8 @@ class FeignResponseWrapperTest {
     void testGetBodyAsObjectWithBadJson() {
         final String body = "{\"mock\": \"it's a bad JSON\"";
         final Supplier<ResponseEntity<String>> clientSupplier = () -> ResponseEntity.badRequest().body(body);
-        assertThrows(ConversionException.class, () -> FeignResponseWrapper.just(clientSupplier).getBodyAsObject(MockResponseDTO.class));
+        final FeignResponseWrapper clientFeignResponseWrapper = FeignResponseWrapper.just(clientSupplier);
+        assertThrows(ConversionException.class, () -> clientFeignResponseWrapper.getBodyAsObject(MockResponseDTO.class));
     }
 
     @Test
@@ -136,7 +137,7 @@ class FeignResponseWrapperTest {
         final String body = "[\n" + "\t{\"mock\": \"it's OK\"}\n" + "]";
         final Supplier<ResponseEntity<String>> clientSupplier = () -> ResponseEntity.badRequest().body(body);
         FeignResponseWrapper.just(clientSupplier).getBodyAsListOfObjects(MockResponseDTO.class)
-                .ifPresent(mockResponseDTOList -> Assertions.assertEquals("it's OK", mockResponseDTOList.get(0).getMock()));
+                .ifPresent(mockResponseDTOList -> assertEquals("it's OK", mockResponseDTOList.get(0).getMock()));
     }
 
     @Test
@@ -151,6 +152,7 @@ class FeignResponseWrapperTest {
     void testGetBodyAsListOfObjectsWithBadJson() {
         final String body = "[\n" + "\t{\"mock\": \"it's OK\"\n" + "]";
         final Supplier<ResponseEntity<String>> clientSupplier = () -> ResponseEntity.badRequest().body(body);
-        assertThrows(ConversionException.class, () -> FeignResponseWrapper.just(clientSupplier).getBodyAsListOfObjects(MockResponseDTO.class));
+        final FeignResponseWrapper clientFeignResponseWrapper = FeignResponseWrapper.just(clientSupplier);
+        assertThrows(ConversionException.class, () -> clientFeignResponseWrapper.getBodyAsListOfObjects(MockResponseDTO.class));
     }
 }
