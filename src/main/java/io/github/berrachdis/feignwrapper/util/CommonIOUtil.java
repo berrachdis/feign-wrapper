@@ -21,7 +21,7 @@ public final class CommonIOUtil {
         if (response != null) {
             if (response.body() != null) {
                 try {
-                    body = IOUtils.toString(response.body().asInputStream(), Charset.defaultCharset());
+                    body = IOUtils.toString(response.body().asInputStream(), Charset.defaultCharset().toString());
                 } catch (IOException e) {
                     log.error("Failed to process error response body", e);
                 }
