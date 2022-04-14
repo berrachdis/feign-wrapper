@@ -17,10 +17,6 @@ public enum Series {
         this.message = message;
     }
 
-    public int value() {
-        return this.value;
-    }
-
     public String message() { return this.message; }
 
     public static Series valueOf(int status) {

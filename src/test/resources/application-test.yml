@@ -1,0 +1,7 @@
+feign-wrapper:
+  customStatus: 299, 298 #List of unknown HttpStatus code
+  retry:
+    max-attempt: 4
+    interval: 3000
+    seriesSet: SERVER_ERROR #INFORMATIONAL ,SUCCESSFUL ,REDIRECTION ,CLIENT_ERROR ,SERVER_ERROR
+    retryableStatusCodes: 401, 299 #List of HttpStatus code

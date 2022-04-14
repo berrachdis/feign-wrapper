@@ -12,12 +12,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
 
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class FeignResponseWrapper {
+    private static final String ERROR_MAPPER_IS_NULL = "errorMapper is null";
+    private static final String DESERIALIZATION_ERROR = "Could not deserialize to the object due to [%s]";
     private static final Logger LOGGER = LoggerFactory.getLogger(FeignResponseWrapper.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final ResponseWrap responseWrap;
@@ -50,11 +53,11 @@ public class FeignResponseWrapper {
      * otherwise the current object which contains the error response
      */
     public FeignResponseWrapper then(Supplier<ResponseEntity<String>> clientSupplier) {
-        Objects.requireNonNull(clientSupplier, "errorMapper is null");
+        Objects.requireNonNull(clientSupplier, ERROR_MAPPER_IS_NULL);
         if (!isError()) {
             return just(clientSupplier);
         }
-        LOGGER.error("The previous call has failed {} " + responseWrap);
+        LOGGER.error("The previous call has failed {} ", responseWrap);
         return this;
     }
 
@@ -76,7 +79,7 @@ public class FeignResponseWrapper {
      * @return the instance of the current object
      */
     public FeignResponseWrapper doOnError(Consumer<ResponseWrap> errorMapper) {
-        Objects.requireNonNull(errorMapper, "errorMapper is null");
+        Objects.requireNonNull(errorMapper, ERROR_MAPPER_IS_NULL);
         if (isError()) {
             errorMapper.accept(responseWrap);
         }
@@ -132,7 +135,7 @@ public class FeignResponseWrapper {
      */
     public void subscribe(Consumer<ResponseWrap> successMapper, Consumer<ResponseWrap> errorMapper, Completion completion) {
         Objects.requireNonNull(successMapper, "successMapper is null");
-        Objects.requireNonNull(errorMapper, "errorMapper is null");
+        Objects.requireNonNull(errorMapper, ERROR_MAPPER_IS_NULL);
         if (isError()) {
             errorMapper.accept(responseWrap);
         } else {
@@ -155,8 +158,19 @@ public class FeignResponseWrapper {
         try {
             return Optional.ofNullable(objectMapper.readValue(this.responseWrap.body(), toValueType));
         } catch (JsonProcessingException e) {
-            LOGGER.error("Could not deserialize to the object due to [{}]", e.getMessage());
-            throw new ConversionException(e);
+            throw new ConversionException(String.format(DESERIALIZATION_ERROR, e.getMessage()));
+        }
+    }
+
+    public <T> Optional<List<T>> getBodyAsListOfObjects(Class<T> toValueType) {
+        if (!StringUtils.hasLength(responseWrap.body())) {
+            LOGGER.warn("The response body is null or empty");
+            return Optional.empty();
+        }
+        try {
+            return Optional.ofNullable(objectMapper.readValue(this.responseWrap.body(), objectMapper.getTypeFactory().constructCollectionType(List.class, toValueType)));
+        } catch (JsonProcessingException e) {
+            throw new ConversionException(String.format(DESERIALIZATION_ERROR, e.getMessage()));
         }
     }
 

@@ -22,7 +22,8 @@ public class CustomRetryer implements Retryer {
 
     @Override
     public void continueOrPropagate(RetryableException e) {
-        LOGGER.warn("Feign retry attempt {} due to  HttpStatus = {}, Series = {}", attempt, e.status(), Series.valueOf(e.status()).message());
+        final String series = Series.valueOf(e.status()).message();
+        LOGGER.warn("Feign retry attempt {} due to  HttpStatus = {}, Series = {}", attempt, e.status(), series);
 
         handleRestClientError(e);
 
@@ -47,15 +48,12 @@ public class CustomRetryer implements Retryer {
             if (ex.getCause() instanceof SocketTimeoutException) {
                 // Handle socket timeout
                 LOGGER.warn("A socket time out error occurred while calling the client [{}].", ex.getMessage());
-                return;
             } else if (ex.getCause() instanceof SSLHandshakeException) {
                 // Handle Sock handshake
                 LOGGER.warn("A socket handshake error occurred while calling the client [{}].", ex.getMessage());
-                return;
             } else if (ex.getCause() instanceof ConnectException) {
                 // Handle Connection exception
                 LOGGER.warn("A connection exception error occurred while calling the client [{}].", ex.getMessage());
-                return;
             }
         }
     }
