@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>io.github.berrachdis</groupId>
 	<artifactId>feign-wrapper</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>1.0.0-SNAPSHOT</version>
 	<name>feign-wrapper</name>
 	<description>Feign-wrapper tool to use the openfeign library easily in functional way</description>
 	<url>https://github.com/berrachdis/feign-wrapper</url>
