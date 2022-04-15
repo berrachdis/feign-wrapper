@@ -1,7 +1,8 @@
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=berrachdis_feign-wrapper&metric=coverage)](https://sonarcloud.io/summary/new_code?id=berrachdis_feign-wrapper)
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=berrachdis_feign-wrapper&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=berrachdis_feign-wrapper)
 
 # feign-wrapper
-Feign-wrapper tool to use the openfeign library easily in functional way
+Feign-wrapper is a tool to use the openfeign library easily in functional way
 
 ## Get it as a maven dependency  :
 
